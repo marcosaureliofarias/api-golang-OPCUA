@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  opcua-server:
+    image: mcr.microsoft.com/iotedge/opc-plc
+    ports:
+      - "4840:4840"
+    environment:
+      NODE_CONFIGURATION: |
+        [
+          {"NodeId":"ns=2;s=Demo.Static.Scalar.Double","DataType":"Double","Value":3.14},
+          {"NodeId":"ns=2;s=Demo.Static.Scalar.Boolean","DataType":"Boolean","Value":true},
+          {"NodeId":"ns=2;s=Demo.Static.Scalar.Int32","DataType":"Int32","Value":42}
+        ]
+      DISABLE_DISCOVERY: "false"
+      SECURITY_MODE: "None"
+      AUTHENTICATION: "Anonymous"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "netstat", "-anp", "tcp", "|", "grep", "50000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
