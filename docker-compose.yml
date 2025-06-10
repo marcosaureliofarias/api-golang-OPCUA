@@ -1,23 +1,25 @@
 version: '3.8'
 
 services:
-  opcua-server:
-    image: mcr.microsoft.com/iotedge/opc-plc
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto_mqtt
     ports:
-      - "4840:4840"
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  db:
+    image: postgres:14
+    container_name: postgres_mqtt
     environment:
-      NODE_CONFIGURATION: |
-        [
-          {"NodeId":"ns=2;s=Demo.Static.Scalar.Double","DataType":"Double","Value":3.14},
-          {"NodeId":"ns=2;s=Demo.Static.Scalar.Boolean","DataType":"Boolean","Value":true},
-          {"NodeId":"ns=2;s=Demo.Static.Scalar.Int32","DataType":"Int32","Value":42}
-        ]
-      DISABLE_DISCOVERY: "false"
-      SECURITY_MODE: "None"
-      AUTHENTICATION: "Anonymous"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "netstat", "-anp", "tcp", "|", "grep", "50000"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ceres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_mqtt:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_mqtt:
